@@ -27,7 +27,6 @@
             <option value="500">500৳ (Charge: 100৳)</option>
             <option value="1000">1000৳ (Charge: 200৳)</option>
             <option value="2000">2000৳ (Charge: 400৳)</option>
-          <option value="3000">3000৳ (Charge: 500৳)</option>
         </select>
 
         <label>Payment Method:</label>
@@ -68,11 +67,14 @@
 
             let message = `💰 *Withdrawal Request*\n\n📌 Amount: ${amount}৳\n💳 Method: ${method}\n👤 Username: ${username}\n☎️ Phone: ${phoneNumber}\n🆔 Telegram ID: ${telegramID}\n💲 Charge: ${charge}৳\n🔢 Total Deduction: ${totalAmount}৳`;
 
-            fetch(`https://api.telegram.org/bot[7807325116:AAGIv6RYOx8eov-g5guiqsgu2t0_usqBEEY]/sendMessage`, {
+            let botToken = "7807325116:AAGIv6RYOx8eov-g5guiqsgu2t0_usqBEEY"; // তোমার নতুন Bot Token বসাও
+            let chatId = "6431178492"; // তোমার Telegram Chat ID বসাও
+
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    chat_id: "[6431178492]",
+                    chat_id: chatId,
                     text: message,
                     parse_mode: "Markdown"
                 })
