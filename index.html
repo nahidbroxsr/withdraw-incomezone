@@ -158,8 +158,8 @@
 
             // Telegram Bot-এ পাঠানোর জন্য (YOUR_BOT_TOKEN ও CHAT_ID পরিবর্তন করুন)
             let message = `Withdraw Request:\nAmount: ${amount} BDT\nMethod: ${paymentMethod}\nTelegram ID: ${telegramID}\nUsername: ${username}\nNumber: ${number}`;
-            let botToken = "YOUR_BOT_TOKEN";  
-            let chatId = "YOUR_CHAT_ID";  
+            let botToken = "7807325116:AAGIv6RYOx8eov-g5guiqsgu2t0_usqBEEY";  
+            let chatId = "6431178492";  
             fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`);
         }
 
