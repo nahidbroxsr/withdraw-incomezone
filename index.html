@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Income Zone - Withdrawal</title>
+    <style>
+        body { background-color: black; color: white; text-align: center; font-family: Arial, sans-serif; }
+        h1 { font-size: 28px; margin-top: 20px; }
+        .container { width: 90%; max-width: 400px; margin: auto; padding: 20px; border: 1px solid white; border-radius: 10px; text-align: left; }
+        label { display: block; margin-top: 10px; }
+        select, input, button { width: calc(100% - 20px); margin: 5px 0; padding: 10px; border-radius: 5px; background-color: black; color: white; border: 1px solid white; display: block; }
+        button { background-color: white; color: black; font-weight: bold; cursor: pointer; }
+        .loading { display: none; margin: 10px auto; border: 5px solid white; border-top: 5px solid black; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .history { margin-top: 20px; text-align: left; }
+        .request-item { border: 1px solid white; padding: 10px; margin: 5px 0; border-radius: 5px; position: relative; }
+        .cancel-btn { position: absolute; right: 10px; top: 10px; background: red; color: white; border: none; padding: 5px; cursor: pointer; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>Income Zone</h1>
+    <div class="container">
+        <label>Amount (৳) & Charge:</label>
+        <select id="amount">
+            <option value="200">200৳ (Charge: 40৳)</option>
+            <option value="500">500৳ (Charge: 100৳)</option>
+            <option value="1000">1000৳ (Charge: 200৳)</option>
+            <option value="2000">2000৳ (Charge: 400৳)</option>
+          <option value="3000">3000৳ (Charge: 500৳)</option>
+        </select>
+
+        <label>Payment Method:</label>
+        <select id="paymentMethod">
+            <option value="Bkash">Bkash</option>
+            <option value="Nagad">Nagad</option>
+        </select>
+
+        <label>Telegram ID:</label>
+        <input type="text" id="telegramID" placeholder="Enter Telegram ID">
+        
+        <label>Username:</label>
+        <input type="text" id="username" placeholder="Enter Username">
+        
+        <label>Phone Number:</label>
+        <input type="text" id="phoneNumber" placeholder="Enter Phone Number">
+
+        <button onclick="submitRequest()">Submit</button>
+        <div class="loading" id="loading"></div>
+    </div>
+
+    <div class="history">
+        <h2>Your Requests</h2>
+        <div id="requestHistory"></div>
+    </div>
+
+    <script>
+        function submitRequest() {
+            document.getElementById("loading").style.display = "block";
+
+            let amount = document.getElementById("amount").value;
+            let method = document.getElementById("paymentMethod").value;
+            let telegramID = document.getElementById("telegramID").value;
+            let username = document.getElementById("username").value;
+            let phoneNumber = document.getElementById("phoneNumber").value;
+            let charge = (amount / 100) * 20;
+            let totalAmount = parseInt(amount) + charge;
+
+            let message = `💰 *Withdrawal Request*\n\n📌 Amount: ${amount}৳\n💳 Method: ${method}\n👤 Username: ${username}\n☎️ Phone: ${phoneNumber}\n🆔 Telegram ID: ${telegramID}\n💲 Charge: ${charge}৳\n🔢 Total Deduction: ${totalAmount}৳`;
+
+            fetch(`https://api.telegram.org/bot[7807325116:AAGIv6RYOx8eov-g5guiqsgu2t0_usqBEEY]/sendMessage`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    chat_id: "[6431178492]",
+                    text: message,
+                    parse_mode: "Markdown"
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("loading").style.display = "none";
+                saveToHistory(amount, method, username, phoneNumber, telegramID, charge, totalAmount);
+                alert("Withdrawal request sent successfully!");
+            })
+            .catch(error => {
+                document.getElementById("loading").style.display = "none";
+                alert("Error sending request.");
+            });
+        }
+
+        function saveToHistory(amount, method, username, phoneNumber, telegramID, charge, totalAmount) {
+            let history = JSON.parse(localStorage.getItem("withdrawHistory")) || [];
+            let request = { amount, method, username, phoneNumber, telegramID, charge, totalAmount, id: Date.now() };
+            history.push(request);
+            localStorage.setItem("withdrawHistory", JSON.stringify(history));
+            displayHistory();
+        }
+
+        function displayHistory() {
+            let history = JSON.parse(localStorage.getItem("withdrawHistory")) || [];
+            let historyDiv = document.getElementById("requestHistory");
+            historyDiv.innerHTML = "";
+
+            history.forEach(request => {
+                let requestDiv = document.createElement("div");
+                requestDiv.classList.add("request-item");
+                requestDiv.innerHTML = `
+                    <p>💰 ${request.amount}৳ | 💲 Charge: ${request.charge}৳</p>
+                    <p>💳 ${request.method} | 👤 ${request.username}</p>
+                    <p>☎️ ${request.phoneNumber} | 🆔 ${request.telegramID}</p>
+                    <button class="cancel-btn" onclick="cancelRequest(${request.id})">Cancel</button>
+                `;
+                historyDiv.appendChild(requestDiv);
+            });
+        }
+
+        function cancelRequest(id) {
+            let history = JSON.parse(localStorage.getItem("withdrawHistory")) || [];
+            history = history.filter(request => request.id !== id);
+            localStorage.setItem("withdrawHistory", JSON.stringify(history));
+            displayHistory();
+        }
+
+        window.onload = displayHistory;
+    </script>
+</body>
+</html>
