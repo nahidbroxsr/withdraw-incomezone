@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Withdraw</title>
+    <style>
+        body {
+            background-color: yellow;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            background: white;
+            width: 300px;
+            margin: auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 2px 2px 10px gray;
+        }
+        select, input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 5px;
+            border-radius: 5px;
+            border: none;
+            font-size: 16px;
+        }
+        .payment-methods button {
+            background: yellow;
+            color: black;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid black;
+        }
+        .selected {
+            background: white !important;
+            color: black !important;
+        }
+        #withdraw {
+            background: yellow;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        #loading {
+            display: none;
+            font-size: 18px;
+            color: red;
+            font-weight: bold;
+        }
+        .requests {
+            margin-top: 20px;
+        }
+        .request-box {
+            background: white;
+            padding: 10px;
+            margin: 10px auto;
+            border-radius: 5px;
+            box-shadow: 1px 1px 5px gray;
+        }
+        .cancel-btn {
+            background: red;
+            color: white;
+            font-size: 12px;
+            padding: 5px;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Withdraw Money</h1>
+
+    <div class="container">
+        <label>Amount:</label>
+        <select id="amount">
+            <option value="200">200 BDT</option>
+            <option value="300">300 BDT</option>
+            <option value="400">400 BDT</option>
+            <option value="500">500 BDT</option>
+            <option value="600">600 BDT</option>
+            <option value="700">700 BDT</option>
+            <option value="800">800 BDT</option>
+            <option value="900">900 BDT</option>
+            <option value="1000">1000 BDT</option>
+            <option value="1500">1500 BDT</option>
+        </select>
+
+        <label>Payment Method:</label>
+        <div class="payment-methods">
+            <button id="nagad" onclick="setPaymentMethod('Nagad')">Nagad</button>
+            <button id="bkash" onclick="setPaymentMethod('Bkash')">Bkash</button>
+            <button id="rocket" onclick="setPaymentMethod('Rocket')">Rocket</button>
+        </div>
+
+        <input type="text" id="telegramID" placeholder="Telegram ID">
+        <input type="text" id="username" placeholder="Telegram Username">
+        <input type="text" id="number" placeholder="Phone Number">
+
+        <button id="withdraw" onclick="submitWithdraw()">Withdraw</button>
+        <p id="loading">Processing Request...</p>
+    </div>
+
+    <div class="requests">
+        <h3>Withdraw Requests</h3>
+        <button onclick="showRequests()">View Requests</button>
+        <div id="request-list"></div>
+    </div>
+
+    <script>
+        let paymentMethod = "";
+
+        function setPaymentMethod(method) {
+            paymentMethod = method;
+
+            // সব বাটন কালার রিসেট
+            document.getElementById("nagad").classList.remove("selected");
+            document.getElementById("bkash").classList.remove("selected");
+            document.getElementById("rocket").classList.remove("selected");
+
+            // সিলেক্ট করা বাটন সাদা করে দিন
+            document.getElementById(method.toLowerCase()).classList.add("selected");
+        }
+
+        function submitWithdraw() {
+            let amount = document.getElementById("amount").value;
+            let telegramID = document.getElementById("telegramID").value;
+            let username = document.getElementById("username").value;
+            let number = document.getElementById("number").value;
+
+            if (!paymentMethod) {
+                alert("Please select a payment method!");
+                return;
+            }
+
+            let withdrawData = {
+                amount: amount,
+                paymentMethod: paymentMethod,
+                telegramID: telegramID,
+                username: username,
+                number: number
+            };
+
+            let requests = JSON.parse(localStorage.getItem("withdrawRequests")) || [];
+            requests.push(withdrawData);
+            localStorage.setItem("withdrawRequests", JSON.stringify(requests));
+
+            // লোডিং দেখানো
+            document.getElementById("loading").style.display = "block";
+
+            // ৩ সেকেন্ড পরে লোডিং বন্ধ করা
+            setTimeout(() => {
+                document.getElementById("loading").style.display = "none";
+                alert("Withdraw request submitted!");
+                showRequests();
+            }, 3000);
+
+            // Telegram Bot-এ পাঠানোর জন্য (YOUR_BOT_TOKEN ও CHAT_ID পরিবর্তন করুন)
+            let message = `Withdraw Request:\nAmount: ${amount} BDT\nMethod: ${paymentMethod}\nTelegram ID: ${telegramID}\nUsername: ${username}\nNumber: ${number}`;
+            let botToken = "YOUR_BOT_TOKEN";  
+            let chatId = "YOUR_CHAT_ID";  
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`);
+        }
+
+        function showRequests() {
+            let requests = JSON.parse(localStorage.getItem("withdrawRequests")) || [];
+            let requestList = document.getElementById("request-list");
+            requestList.innerHTML = "";
+
+            requests.forEach((req, index) => {
+                let div = document.createElement("div");
+                div.classList.add("request-box");
+                div.innerHTML = `
+                    <p><strong>${req.amount} BDT</strong> via ${req.paymentMethod}</p>
+                    <p>Telegram ID: ${req.telegramID}</p>
+                    <p>Username: ${req.username}</p>
+                    <p>Number: ${req.number}</p>
+                    <button class="cancel-btn" onclick="cancelRequest(${index})">Cancel</button>
+                `;
+                requestList.appendChild(div);
+            });
+        }
+
+        function cancelRequest(index) {
+            let requests = JSON.parse(localStorage.getItem("withdrawRequests")) || [];
+            requests.splice(index, 1);
+            localStorage.setItem("withdrawRequests", JSON.stringify(requests));
+            showRequests();
+        }
+    </script>
+
+</body>
+</html>
